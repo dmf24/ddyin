@@ -1,0 +1,7 @@
+
+group_variable: local
+
+SHARED:
+  shared_variable:
+    - listitem1
+    - listitem2
