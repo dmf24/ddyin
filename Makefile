@@ -55,7 +55,7 @@ ${SAMPLE_DIR}/ddyin: source/ddyin.py
 	cp source/ddyin.py $@
 	chmod 755 $@
 
-${SAMPLE_INV}/groups_by_host.yml:
+${SAMPLE_INV}/groups_by_host.yml: source/config-templates/groups_by_host.yml/sample
 	cp source/config-templates/groups_by_host.yml/sample $@
 
 ${SAMPLE_INV}/raw.yml:
