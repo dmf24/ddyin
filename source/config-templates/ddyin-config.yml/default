@@ -7,3 +7,6 @@ groups_by_host:
 vars:
   - inventory/group_vars
   - inventory/host_vars
+
+ec2:
+  external: true

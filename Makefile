@@ -31,21 +31,27 @@ ${BUILD_INV}/groups_by_host.yml:
 ${BUILD_INV}/raw.yml:
 	echo '---' > $@
 
-${BUILD_DIR}:
+${BUILD_INV}:
+	${MKDIR_P} $@
+
+${BUILD_HV}:
+	${MKDIR_P} $@
+
+${BUILD_GV}:
 	${MKDIR_P} $@
 
 default-config: ${BUILD_DIR} ${BUILD_DIR}/ddyin-config.yml
 
-${BUILD_DIR}/ddyin-config.yml:
+${BUILD_DIR}/ddyin-config.yml: source/config-templates/ddyin-config.yml/default
 	cp source/config-templates/ddyin-config.yml/default $@
 
 executable: ${BUILD_DIR} ${BUILD_DIR}/ddyin
 
-${BUILD_DIR}/ddyin:
+${BUILD_DIR}/ddyin: source/ddyin.py
 	cp source/ddyin.py ${BUILD_DIR}/ddyin
 	chmod 755 ${BUILD_DIR}/ddyin
 
-${SAMPLE_DIR}/ddyin:
+${SAMPLE_DIR}/ddyin: source/ddyin.py
 	cp source/ddyin.py $@
 	chmod 755 $@
 
