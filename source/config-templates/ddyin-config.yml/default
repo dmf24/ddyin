@@ -4,6 +4,9 @@ base: inventory/raw.yml
 groups_by_host:
   - inventory/groups_by_host.yml
 
+children:
+  - inventory/children.yml
+
 vars:
   - inventory/group_vars
   - inventory/host_vars

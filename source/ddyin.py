@@ -213,6 +213,16 @@ if 'ec2' in config.keys() and not config.get('ec2', {}).get('disabled', False):
                     groups_by_host.setdefault(i.private_ip_address, ddyin_groups[0])
     merge_gbh(data, load_gbh(groups_by_host))
 
+if 'children' in config.keys():
+    log.debug('loading children')
+    for item in listify(config['children']):
+        gmap=load(item)
+        for parent in gmap:
+            for child in gmap[parent]:
+                for hostname in data.get(child, {}).get('hosts', []):
+                    if hostname not in data[parent]['hosts']:
+                        data[parent]['hosts'].append(hostname)
+
 if 'vars' in config.keys():
     log.debug('Loading and merging vars')
     for item in listify(config['vars']):

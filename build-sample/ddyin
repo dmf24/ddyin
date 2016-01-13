@@ -8,7 +8,16 @@ import os
 import copy
 import logging as log
 
-log.basicConfig(stream=sys.stderr, level=log.DEBUG)
+try:
+    import boto.ec2
+    boto_available=True
+except ImportError:
+    boto_available=False
+
+if 'debug' in sys.argv[0]:
+    log.basicConfig(stream=sys.stderr, level=log.DEBUG)
+else:
+    log.basicConfig(stream=sys.stderr, level=log.WARN)
 
 data={}
 
@@ -35,11 +44,15 @@ def load_raw(baseinventory):
     return results
 
 def load_gbh(groups_by_host):
+    """Accepts either a string representing a file path to a yaml data file,
+    or a python dictionary with hostnames as keys that map
+    to a list of groupnames.  Returns a dictionary suitable for
+    dumping to json and passing to to ansible."""
     results=defaultdict(dict)
     if isinstance(groups_by_host, str):
         gbh=load(groups_by_host)
     elif isinstance(groups_by_host, dict):
-        gbh=groups_by_host_file
+        gbh=groups_by_host
     else:
         assert (isinstance(groups_by_host, str) or isinstance(groups_by_host, dict)), "load_gbh: groups_by_host must be a filename or a dictionary"
     for hostname in gbh:
@@ -179,6 +192,26 @@ if 'groups_by_host' in config.keys():
     for item in listify(config['groups_by_host']):
         log.debug('Loading %s, type %s, and merging with inventory data using merge_gbh' % (item, getpathtype(item)))
         merge_gbh(data, gbh_dispatch[getpathtype(item)](item))
+
+def gsplit(grpstring):
+    return [x.strip() for x in grpstring.split(',')]
+
+if 'ec2' in config.keys() and not config.get('ec2', {}).get('disabled', False):
+    log.debug('Loading ec2 groups by host')
+    region=config['ec2'].get('region', 'us-east-1')
+    ddyin_tag=config['ec2'].get('tag', 'ddyin')
+    conn=boto.ec2.connect_to_region(region)
+    reservations=conn.get_all_reservations()
+    groups_by_host={}
+    for r in reservations:
+        for i in r.instances:
+            ddyin_groups=[gsplit(grps) for tag, grps in i.tags.items() if tag == ddyin_tag]
+            if len(ddyin_groups) > 0:
+                if config['ec2'].get('external', False):
+                    groups_by_host.setdefault(i.ip_address, ddyin_groups[0])
+                else:
+                    groups_by_host.setdefault(i.private_ip_address, ddyin_groups[0])
+    merge_gbh(data, load_gbh(groups_by_host))
 
 if 'vars' in config.keys():
     log.debug('Loading and merging vars')
